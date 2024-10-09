@@ -40,6 +40,9 @@ MonoBehaviour:
   - Fire
   - LoadSceneRPC
   - RespawnSpaceship
+  - IniciarJogo
+  - ReceberAtaque
+  - FinalizarJogo
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
