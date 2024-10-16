@@ -2,17 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ICar : MonoBehaviour
+public interface ICar
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    void Accelerate(float amount);
+    void Drive(float amount);
+    void UpdatePosition();
 }
