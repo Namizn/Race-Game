@@ -2,10 +2,12 @@
 using UnityEngine; // Para usar funcionalidades do Unity
 using Photon.Pun; // Para usar o Photon PUN (Photon Unity Networking)
 using Photon.Realtime; // Para usar funcionalidades em tempo real do Photon
+using UnityEngine.SceneManagement;
 
 // Define a classe NetworkManager que herda de MonoBehaviourPunCallbacks
 public class NetworkManager : MonoBehaviourPunCallbacks
 {
+
     #region Singleton
 
     // Declara uma instância estática da classe NetworkManager
@@ -33,6 +35,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     void Start()
     {
         PhotonNetwork.ConnectUsingSettings(); // Conecta ao servidor Photon usando configurações definidas
+
+        // Se a câmera não foi atribuída no Inspector, tenta buscar a Main Camera automaticamente
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
     }
     
     // Método chamado quando conectado ao servidor mestre do Photon
@@ -85,8 +94,13 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         MenuManager.instance.UpdatePlayerList(GetPlayerList()); // Atualiza a lista de jogadores no menuManager
         MenuManager.instance.SetStartButton(PhotonNetwork.IsMasterClient); // Define o botão de iniciar se o jogador for o mestre da sala
 
-        // Instancia o carro do jogador
-        SpawnPlayer();
+        Debug.Log("Entrou na sala!");
+
+        // Verifica se a cena atual é a cena do jogo
+        if (SceneManager.GetActiveScene().name == "NomeDaCenaDoJogo")
+        {
+            SpawnPlayer(); // Só chama o spawn dos carros na cena do jogo
+        }
     }
     
     // Método para carregar uma cena
@@ -121,8 +135,37 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         return list; // Retorna a lista de jogadores
     }
 
-    void SpawnPlayer()
+    public Camera mainCamera; // Referência à câmera principal
+
+    public void StartGame()
     {
-        PhotonNetwork.Instantiate("CarroPrefab", new Vector3(0, 0.5f, 0), Quaternion.identity);
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // Carrega a cena de jogo para todos os jogadores
+            PhotonNetwork.LoadLevel("Jogo");
+        }
+    }
+
+    public void SpawnPlayer()
+    {
+        Debug.Log("Tentando spawnar o carro...");
+
+        GameObject playerCar = PhotonNetwork.Instantiate("Resources/CarroPrefab", new Vector3(0, 2f, 0), Quaternion.identity);
+
+        if (playerCar != null)
+        {
+            Debug.Log("Carro spawnado com sucesso.");
+        }
+        else
+        {
+            Debug.LogError("Falha ao spawnar o carro.");
+        }
+
+        if (playerCar.GetComponent<PhotonView>().IsMine)
+        {
+            CameraFollow cameraFollow = mainCamera.GetComponent<CameraFollow>();
+            cameraFollow.SetTarget(playerCar.transform);
+        }
+
     }
 }

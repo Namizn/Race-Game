@@ -2,6 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun; // Biblioteca para RPC
+using UnityEngine;
+using Photon.Pun;
+
+/// <summary>
+/// Controla o movimento e a sincronização do carro do jogador em 2D.
+/// </summary>
 public class CarController : MonoBehaviourPun, ICar
 {
     // Velocidade de movimento do carro
@@ -17,18 +23,17 @@ public class CarController : MonoBehaviourPun, ICar
     private float turnInput;
 
     // Variáveis para sincronização
-    private Vector3 networkPosition;
-    private Quaternion networkRotation;
+    private Vector2 networkPosition;
+    private float networkRotation;
 
-    // Inicializa o componente Rigidbody.
-
+    // Inicializa o componente Rigidbody2D
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
 
         if (photonView.IsMine)
         {
-            // Opcional: Configure a câmera para seguir este carro
+            // Configure a câmera para seguir este carro, se necessário
         }
         else
         {
@@ -37,66 +42,63 @@ public class CarController : MonoBehaviourPun, ICar
         }
     }
 
-    // Captura a entrada do jogador.
-
+    // Captura a entrada do jogador
     void Update()
     {
         if (photonView.IsMine)
         {
-            moveInput = Input.GetAxis("Vertical");
-            turnInput = Input.GetAxis("Horizontal");
+            moveInput = Input.GetAxis("Vertical"); // Input de aceleração para frente/trás
+            turnInput = Input.GetAxis("Horizontal"); // Input para virar à esquerda/direita
         }
         else
         {
             // Atualiza a posição e rotação do carro de acordo com a rede
-            transform.position = Vector3.Lerp(transform.position, networkPosition, Time.deltaTime * 10);
-            transform.rotation = Quaternion.Lerp(transform.rotation, networkRotation, Time.deltaTime * 10);
+            transform.position = Vector2.Lerp(transform.position, networkPosition, Time.deltaTime * 10);
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(0, 0, networkRotation), Time.deltaTime * 10);
         }
     }
 
-    // Movimenta e rotaciona o carro com base na entrada do jogador.
-    
+    // Movimenta e rotaciona o carro com base na entrada do jogador
     void FixedUpdate()
     {
         if (photonView.IsMine)
         {
-            // Movimenta o carro aplicando força no Rigidbody2D
-            Vector2 movement = transform.up * moveInput * speed * Time.fixedDeltaTime;
-            rb.AddForce(movement);
+            // Aplica a rotação primeiro (carro se orienta antes de se mover)
+            float rotationAmount = turnInput * turnSpeed * Time.fixedDeltaTime;
+            rb.MoveRotation(rb.rotation - rotationAmount);
 
-            // Rotaciona o carro
-            float rotation = turnInput * turnSpeed * Time.fixedDeltaTime;
-            rb.MoveRotation(rb.rotation - rotation); // Usamos -rotation para inverter a rotação no eixo 2D
+            // Movimenta o carro na direção em que está apontando (eixo up é a frente)
+            Vector2 movement = transform.up * moveInput * speed * Time.fixedDeltaTime;
+            rb.MovePosition(rb.position + movement); // Atualiza a posição com MovePosition
 
             // Sincroniza a posição e rotação com os outros jogadores
             photonView.RPC("SyncPosition", RpcTarget.Others, rb.position, rb.rotation);
         }
     }
-    
-    // Método RPC para sincronizar a posição do carro com outros jogadores.
+
+    // Método RPC para sincronizar a posição do carro com outros jogadores
     [PunRPC]
     void SyncPosition(Vector2 position, float rotation)
     {
         networkPosition = position;
-        networkRotation = Quaternion.Euler(0, 0, rotation); // Converte o valor de rotação em um Quaternion
+        networkRotation = rotation; // Armazena o valor da rotação (em graus)
     }
 
-    // Implementação da aceleração do carro.
+    // Implementação da aceleração do carro
     public void Accelerate(float amount)
     {
-        // Implementação da aceleração (pode ser expandida)
+        // Implementação adicional de aceleração, se necessário
     }
 
-    // Implementação da direção do carro.
+    // Implementação da direção do carro
     public void Drive(float amount)
     {
-        // Implementação da direção (pode ser expandida)
+        // Implementação adicional de direção, se necessário
     }
 
-
-    // Atualiza a posição do carro.
+    // Atualiza a posição do carro (método adicional)
     public void UpdatePosition()
     {
-        // Implementação da atualização de posição (pode ser expandida)
+        // Implementação adicional para atualização de posição
     }
 }
