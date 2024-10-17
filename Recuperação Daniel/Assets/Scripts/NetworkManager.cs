@@ -84,8 +84,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         Debug.Log("Player " + PhotonNetwork.NickName + " joined room"); // Loga uma mensagem no console
         MenuManager.instance.UpdatePlayerList(GetPlayerList()); // Atualiza a lista de jogadores no menuManager
         MenuManager.instance.SetStartButton(PhotonNetwork.IsMasterClient); // Define o botão de iniciar se o jogador for o mestre da sala
-        
-        SpawnPlayer(); // Instancia o carro do jogador
+
+        // Instancia o carro do jogador
+        SpawnPlayer();
     }
     
     // Método para carregar uma cena
@@ -120,10 +121,8 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         return list; // Retorna a lista de jogadores
     }
 
-    // Instancia o carro do jogador na cena.
     void SpawnPlayer()
     {
         PhotonNetwork.Instantiate("CarroPrefab", new Vector3(0, 0.5f, 0), Quaternion.identity);
     }
-
 }

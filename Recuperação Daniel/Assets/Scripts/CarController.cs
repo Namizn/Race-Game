@@ -10,7 +10,7 @@ public class CarController : MonoBehaviourPun, ICar
     public float turnSpeed = 100f;
 
     // Referência ao Rigidbody do carro
-    private Rigidbody rb;
+    private Rigidbody2D rb;
 
     // Variáveis para armazenar entradas
     private float moveInput;
@@ -24,7 +24,7 @@ public class CarController : MonoBehaviourPun, ICar
 
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody2D>();
 
         if (photonView.IsMine)
         {
@@ -60,13 +60,13 @@ public class CarController : MonoBehaviourPun, ICar
     {
         if (photonView.IsMine)
         {
-            // Calcula o movimento e a rotação
-            Vector3 movement = transform.forward * moveInput * speed * Time.fixedDeltaTime;
-            float rotation = turnInput * turnSpeed * Time.fixedDeltaTime;
+            // Movimenta o carro aplicando força no Rigidbody2D
+            Vector2 movement = transform.up * moveInput * speed * Time.fixedDeltaTime;
+            rb.AddForce(movement);
 
-            // Aplica a física ao Rigidbody
-            rb.MovePosition(rb.position + movement);
-            rb.MoveRotation(rb.rotation * Quaternion.Euler(0, rotation, 0));
+            // Rotaciona o carro
+            float rotation = turnInput * turnSpeed * Time.fixedDeltaTime;
+            rb.MoveRotation(rb.rotation - rotation); // Usamos -rotation para inverter a rotação no eixo 2D
 
             // Sincroniza a posição e rotação com os outros jogadores
             photonView.RPC("SyncPosition", RpcTarget.Others, rb.position, rb.rotation);
@@ -75,10 +75,10 @@ public class CarController : MonoBehaviourPun, ICar
     
     // Método RPC para sincronizar a posição do carro com outros jogadores.
     [PunRPC]
-    void SyncPosition(Vector3 position, Quaternion rotation)
+    void SyncPosition(Vector2 position, float rotation)
     {
         networkPosition = position;
-        networkRotation = rotation;
+        networkRotation = Quaternion.Euler(0, 0, rotation); // Converte o valor de rotação em um Quaternion
     }
 
     // Implementação da aceleração do carro.
