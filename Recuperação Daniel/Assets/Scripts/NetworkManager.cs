@@ -30,20 +30,15 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
     #endregion
 
-    
+
+    public bool IsMasterClient { get => PhotonNetwork.IsMasterClient; }
+
     // Método chamado antes do primeiro frame de atualização
     void Start()
     {
         PhotonNetwork.ConnectUsingSettings(); // Conecta ao servidor Photon usando configurações definidas
-
-        // Se a câmera não foi atribuída no Inspector, tenta buscar a Main Camera automaticamente
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
-
     }
-    
+
     // Método chamado quando conectado ao servidor mestre do Photon
     public override void OnConnectedToMaster()
     {
@@ -51,14 +46,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks
 
         MenuManager.instance.Connected(); // Chama o método Connected do menuManager
     }
-    
+
     // Método para entrar em uma sala com um nome de sala e apelido
     public void JoinRoom(string roomName, string nickname)
     {
         PhotonNetwork.NickName = nickname; // Define o apelido do jogador
         PhotonNetwork.JoinRoom(roomName); // Tenta entrar na sala especificada
     }
-    
+
     // Método para criar uma sala com um nome de sala e apelido
     public void CreateRoom(string roomName, string nickname)
     {
@@ -71,38 +66,30 @@ public class NetworkManager : MonoBehaviourPunCallbacks
     {
         PhotonNetwork.LeaveRoom(); // Sai da sala atual
     }
-    
+
     // Método chamado quando um jogador entra na sala
-    public override void OnPlayerEnteredRoom(Player newPlayer)
+    public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
     {
         Debug.Log("Player " + newPlayer.NickName + " joined room"); // Loga uma mensagem no console
         MenuManager.instance.UpdatePlayerList(GetPlayerList()); // Atualiza a lista de jogadores no menuManager
     }
 
     // Método chamado quando um jogador sai da sala
-    public override void OnPlayerLeftRoom(Player otherPlayer)
+    public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
     {
         Debug.Log("Player " + otherPlayer.NickName + " left room"); // Loga uma mensagem no console
         MenuManager.instance.UpdatePlayerList(GetPlayerList()); // Atualiza a lista de jogadores no menuManager
         MenuManager.instance.SetStartButton(PhotonNetwork.IsMasterClient); // Define o botão de iniciar se o jogador for o mestre da sala
     }
-    
+
     // Método chamado quando o jogador entra na sala
     public override void OnJoinedRoom()
     {
         Debug.Log("Player " + PhotonNetwork.NickName + " joined room"); // Loga uma mensagem no console
         MenuManager.instance.UpdatePlayerList(GetPlayerList()); // Atualiza a lista de jogadores no menuManager
         MenuManager.instance.SetStartButton(PhotonNetwork.IsMasterClient); // Define o botão de iniciar se o jogador for o mestre da sala
-
-        Debug.Log("Entrou na sala!");
-
-        // Verifica se a cena atual é a cena do jogo
-        if (SceneManager.GetActiveScene().name == "NomeDaCenaDoJogo")
-        {
-            SpawnPlayer(); // Só chama o spawn dos carros na cena do jogo
-        }
     }
-    
+
     // Método para carregar uma cena
     public void LoadScene(string sceneName)
     {
@@ -133,39 +120,5 @@ public class NetworkManager : MonoBehaviourPunCallbacks
         }
 
         return list; // Retorna a lista de jogadores
-    }
-
-    public Camera mainCamera; // Referência à câmera principal
-
-    public void StartGame()
-    {
-        if (PhotonNetwork.IsMasterClient)
-        {
-            // Carrega a cena de jogo para todos os jogadores
-            PhotonNetwork.LoadLevel("Jogo");
-        }
-    }
-
-    public void SpawnPlayer()
-    {
-        Debug.Log("Tentando spawnar o carro...");
-
-        GameObject playerCar = PhotonNetwork.Instantiate("Resources/CarroPrefab", new Vector3(0, 2f, 0), Quaternion.identity);
-
-        if (playerCar != null)
-        {
-            Debug.Log("Carro spawnado com sucesso.");
-        }
-        else
-        {
-            Debug.LogError("Falha ao spawnar o carro.");
-        }
-
-        if (playerCar.GetComponent<PhotonView>().IsMine)
-        {
-            CameraFollow cameraFollow = mainCamera.GetComponent<CameraFollow>();
-            cameraFollow.SetTarget(playerCar.transform);
-        }
-
     }
 }

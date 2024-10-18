@@ -5,9 +5,8 @@ using Photon.Pun; // Biblioteca para RPC
 using UnityEngine;
 using Photon.Pun;
 
-/// <summary>
+
 /// Controla o movimento e a sincronização do carro do jogador em 2D.
-/// </summary>
 public class CarController : MonoBehaviourPun, ICar
 {
     // Velocidade de movimento do carro
@@ -25,6 +24,21 @@ public class CarController : MonoBehaviourPun, ICar
     // Variáveis para sincronização
     private Vector2 networkPosition;
     private float networkRotation;
+
+    bool controllerOn = true;
+
+    [PunRPC]
+    private void Initialize()
+    {
+        if (!photonView.IsMine)
+        {
+            Color color = Color.white;
+            color.a = 0.5f;
+            GetComponent<SpriteRenderer>().color = color;
+            rb.isKinematic = true;
+            controllerOn = false;
+        }
+    }
 
     // Inicializa o componente Rigidbody2D
     void Start()
@@ -101,4 +115,5 @@ public class CarController : MonoBehaviourPun, ICar
     {
         // Implementação adicional para atualização de posição
     }
+
 }

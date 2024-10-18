@@ -6,48 +6,54 @@ using Photon.Realtime;
 public class GameManager : MonoBehaviourPunCallbacks
 {
 
-    /*
-    public Camera mainCamera; // Referência à câmera principal
+    public Camera mainCamera;
+    Vector2 screenBounds;
+    int score;
 
+    public Vector2 ScreenBounds { get => screenBounds; }
+    public int Score { get => score; set => score = value; }
 
-    void Start()
+    const string playerPrefabPath = "Prefabs/Player";
+    int playersInGame = 0;
+
+    private void Start()
     {
-        // Se a câmera não foi atribuída no Inspector, tenta buscar a Main Camera automaticamente
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
-    }
-    public void StartGame()
-    {
-        if (PhotonNetwork.IsMasterClient)
-        {
-            // Carrega a cena de jogo para todos os jogadores
-            PhotonNetwork.LoadLevel("Jogo");
-        }
+        photonView.RPC("AddPlayer", RpcTarget.AllBuffered);
     }
 
-    public void SpawnPlayer()
+    private void CreatePlayer()
     {
-        Debug.Log("Tentando spawnar o carro...");
+        CarController car = NetworkManager.instance.Instantiate(playerPrefabPath, new Vector3(1, 2f, 0), Quaternion.identity).GetComponent<CarController>();
+        car.photonView.RPC("Initialize", RpcTarget.All);
 
-        GameObject playerCar = PhotonNetwork.Instantiate("CarroPrefab", new Vector3(0, 2f, 0), Quaternion.identity);
+        if (car.GetComponent<PhotonView>().IsMine)
+        {
+            Debug.Log("Este carro pertence ao jogador local.");
 
-        if (playerCar != null)
-        {
-            Debug.Log("Carro spawnado com sucesso.");
-        }
-        else
-        {
-            Debug.LogError("Falha ao spawnar o carro.");
-        }
-
-        if (playerCar.GetComponent<PhotonView>().IsMine)
-        {
+            // Atribui a câmera para seguir o carro do jogador
             CameraFollow cameraFollow = mainCamera.GetComponent<CameraFollow>();
-            cameraFollow.SetTarget(playerCar.transform);
+            if (cameraFollow != null)
+            {
+                cameraFollow.SetTarget(car.transform); // Define o carro como o alvo da câmera
+                Debug.Log("Câmera configurada para seguir o carro.");
+            }
+            else
+            {
+                Debug.LogError("Componente CameraFollow não encontrado.");
+            }
         }
 
     }
-    */
+
+    [PunRPC]
+    private void AddPlayer()
+    {
+        playersInGame++;
+        if (playersInGame == PhotonNetwork.PlayerList.Length)
+        {
+            CreatePlayer();
+        }
+    }
+
+
 }
