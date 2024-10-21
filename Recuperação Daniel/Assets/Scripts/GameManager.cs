@@ -9,7 +9,6 @@ public class GameManager : MonoBehaviourPunCallbacks
     public Camera mainCamera;
     Vector2 screenBounds;
     int score;
-
     public Vector2 ScreenBounds { get => screenBounds; }
     public int Score { get => score; set => score = value; }
 
@@ -23,7 +22,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private void CreatePlayer()
     {
-        CarController car = NetworkManager.instance.Instantiate(playerPrefabPath, new Vector3(1, 2f, 0), Quaternion.identity).GetComponent<CarController>();
+        CarController car = NetworkManager.instance.Instantiate(playerPrefabPath, GetRandomSpawnPosition(), Quaternion.identity).GetComponent<CarController>();
         car.photonView.RPC("Initialize", RpcTarget.All);
 
         if (car.GetComponent<PhotonView>().IsMine)
@@ -55,5 +54,11 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
     }
 
-
+    public Vector3 GetRandomSpawnPosition()
+    {
+        // Defina aqui sua lógica para obter uma posição aleatória
+        float x = Random.Range(0.6f, 1.6f);
+        float y = Random.Range(5.46f, 4.5f);
+        return new Vector3(x, y, 0);
+    }
 }

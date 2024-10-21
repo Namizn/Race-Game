@@ -4,25 +4,42 @@ using UnityEngine;
 using Photon.Pun;
 
 // Gerencia a detecção de carros cruzando a linha de chegada.
-public class FinishLineManager : MonoBehaviourPun, IFinishable
+public class FinishLineManager : MonoBehaviourPun
 {
 
-    // Detecta colisões com o trigger da linha de chegada.
-    void OnTriggerEnter(Collider other)
+    // Método chamado quando um objeto entra no Collider da linha de chegada
+    private void OnTriggerEnter(Collider other)
     {
-        // Verifica se o objeto que entrou tem a tag "Player"
+        // Tenta obter a interface IFinishable do objeto que cruzou a linha de chegada
+        IFinishable finishable = other.GetComponent<IFinishable>();
+
+        if (finishable != null)
+        {
+            // Se o objeto implementa IFinishable, chama o método OnFinishLineCrossed
+            finishable.OnFinishLineCrossed();
+        }
+
         if (other.CompareTag("Player"))
         {
-            // Chama o RPC para notificar todos os jogadores
-            photonView.RPC("OnFinishLineCrossed", RpcTarget.All, other.GetComponent<PhotonView>().Owner.NickName);
+            PhotonView playerPhotonView = other.GetComponent<PhotonView>();
+
+            // Verifique se o carro que cruzou a linha de chegada pertence ao jogador local
+            if (playerPhotonView != null && playerPhotonView.IsMine)
+            {
+                Debug.Log("Você cruzou a linha de chegada!");
+
+                // Chame o código para registrar a vitória ou completar a corrida
+                PlayerFinishedRace();
+            }
         }
     }
 
-    // Método RPC chamado quando um carro cruza a linha de chegada.
-    [PunRPC]
-    public void OnFinishLineCrossed(string playerName)
+    void PlayerFinishedRace()
     {
-        Debug.Log($"{playerName} cruzou a linha de chegada!");
-        // Implementação adicional quando um jogador termina a corrida
+        Debug.Log("Corrida finalizada!");
+        // Aqui você pode implementar a lógica de final de corrida, como:
+        // - Mostrar a tela de vitória
+        // - Notificar outros jogadores
+        // - Enviar um RPC para comunicar que a corrida acabou
     }
 }

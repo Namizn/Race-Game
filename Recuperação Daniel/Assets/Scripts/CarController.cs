@@ -7,8 +7,9 @@ using Photon.Pun;
 
 
 /// Controla o movimento e a sincronização do carro do jogador em 2D.
-public class CarController : MonoBehaviourPun, ICar
+public class CarController : MonoBehaviourPun, ICar, IFinishable
 {
+
     // Velocidade de movimento do carro
     public float speed = 10f;
     // Velocidade de rotação do carro
@@ -26,6 +27,17 @@ public class CarController : MonoBehaviourPun, ICar
     private float networkRotation;
 
     bool controllerOn = true;
+
+
+
+    public void OnFinishLineCrossed()
+    {
+        if (photonView.IsMine) // Verifica se é o jogador local
+        {
+            Debug.Log("O carro do jogador local cruzou a linha de chegada!");
+            // Lógica que ocorre ao cruzar a linha de chegada, como exibir uma mensagem de vitória
+        }
+    }
 
     [PunRPC]
     private void Initialize()
@@ -59,7 +71,7 @@ public class CarController : MonoBehaviourPun, ICar
     // Captura a entrada do jogador
     void Update()
     {
-        if (photonView.IsMine)
+        if (photonView.IsMine && controllerOn)
         {
             moveInput = Input.GetAxis("Vertical"); // Input de aceleração para frente/trás
             turnInput = Input.GetAxis("Horizontal"); // Input para virar à esquerda/direita
